@@ -65,7 +65,7 @@ interface IProfile {
   location: String
   website: AWSURL
   birthdate: AWSDate
-  createdAt: AWSDateTime
+  createdAt: AWSDateTime!
   tweets: TweetsPage
   followersCount: Int!
   followingCount: Int!
@@ -84,7 +84,7 @@ type MyProfile implements IProfile {
     location: String
     website: AWSURL
     birthdate: AWSDate
-    createdAt: AWSDateTime
+    createdAt: AWSDateTime!
     tweets: TweetsPage!
     followersCount: Int!
     followingCount: Int!
@@ -102,8 +102,8 @@ type OtherProfile implements IProfile {
     location: String
     website: AWSURL
     birthdate: AWSDate
-    createdAt: AWSDateTime
-    tweets: TweetsPage
+    createdAt: AWSDateTime!
+    tweets: TweetsPage!
     followersCount: Int!
     followingCount: Int!
     tweetsCount: Int!
@@ -114,13 +114,13 @@ type OtherProfile implements IProfile {
 
 interface ITweet {
   id: ID!
-  profile: IProfile!
+  profile: IProfile
   createdAt: AWSDateTime!
 }
 
 type Tweet implements ITweet {
   id: ID!
-  profile: IProfile!
+  profile: IProfile
   createdAt: AWSDateTime!
   text: String!
   replies: Int!
@@ -132,7 +132,7 @@ type Tweet implements ITweet {
 
 type Reply implements ITweet {
   id: ID!
-  profile: IProfile!
+  profile: IProfile
   createdAt: AWSDateTime!
   inReplyToTweet: ITweet!
   inReplyToUsers:[IProfile!]
