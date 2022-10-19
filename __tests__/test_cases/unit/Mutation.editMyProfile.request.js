@@ -3,22 +3,21 @@ const when = require('../../steps/when')
 const chance = require('chance').Chance()
 const path = require('path')
 
-describe('Mutation.editMyProfile.request template', () =>{
+describe('Mutation.editMyProfile.request template', () => {
   it("Should use 'newProfile' fields in expression values", () => {
     const templatePath = path.resolve(__dirname, '../../../mapping-templates/Mutation.editMyProfile.request.vtl')
 
-
     const username = chance.guid()
     const newProfile = {
-      name: 'Diren',
+      name: 'Yan',
       imageUrl: null,
       backgroundImageUrl: null,
       bio: 'test',
       location: null,
       website: null,
-      birthdate: null 
+      birthdate: null,
     }
-    const context = given.an_appsync_context({ username }, { newProfile})
+    const context = given.an_appsync_context({ username }, { newProfile })
     const result = when.we_invoke_an_appsync_template(templatePath, context)
 
     expect(result).toEqual({
@@ -30,14 +29,14 @@ describe('Mutation.editMyProfile.request template', () =>{
         }
       },
       "update" : {
-        "expression" : "set #name = :name, imageUrl = :imageUrl, backgroundImageUrl =:backgroundImageUrl, bio = :bio, #location = :location,  website = :website, birthdate = :birthdate",
+        "expression" : "set #name = :name, imageUrl = :imageUrl, backgroundImageUrl = :backgroundImageUrl, bio = :bio, #location = :location, website = :website, birthdate = :birthdate",
         "expressionNames" : {
-            "#name" : "name",
-            "#location" : "location"
+          "#name" : "name",
+          "#location" : "location"
         },
         "expressionValues" : {
           ":name" : {
-            S: 'Diren'
+            S: 'Yan'
           },
           ":imageUrl" : {
             NULL: true
@@ -56,11 +55,11 @@ describe('Mutation.editMyProfile.request template', () =>{
           },
           ":birthdate" : {
             NULL: true
-          }
+          },
         }
       },
       "condition" : {
-          "expression" : "attribute_exists(id)"
+        "expression" : "attribute_exists(id)"
       }
     })
   })
