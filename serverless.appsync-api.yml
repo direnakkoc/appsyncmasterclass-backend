@@ -30,18 +30,24 @@ mappingTemplates:
     dataSource: tweetFunction
     request: false
     response: false
+  - type: Mutation
+    field: like
+    dataSource: likeMutation
 
   # NESTED FIELDS
   - type: Tweet
     field: profile
     dataSource: usersTable
+  - type: Tweet
+    field: liked
+    dataSource: likesTable
   - type: TimelinePage
     field: tweets
     dataSource: tweetsTable
 
 dataSources:
   - type: NONE
-    name: none 
+    name: none
   - type: AMAZON_DYNAMODB
     name: usersTable
     config:
@@ -54,10 +60,27 @@ dataSources:
     name: timelinesTable
     config:
       tableName: !Ref TimelinesTable
+  - type: AMAZON_DYNAMODB
+    name: likesTable
+    config:
+      tableName: !Ref LikesTable
+  - type: AMAZON_DYNAMODB
+    name: likeMutation
+    config:
+      tableName: !Ref LikesTable
+      iamRoleStatements:
+        - Effect: Allow
+          Action: dynamodb:PutItem
+          Resource: !GetAtt LikesTable.Arn
+        - Effect: Allow
+          Action: dynamodb:UpdateItem
+          Resource:
+            - !GetAtt UsersTable.Arn
+            - !GetAtt TweetsTable.Arn
   - type: AWS_LAMBDA
     name: getImageUploadUrlFunction
     config:
-      functionName: getImageUploadUrl 
+      functionName: getImageUploadUrl
   - type: AWS_LAMBDA
     name: tweetFunction
     config:
@@ -65,3 +88,5 @@ dataSources:
 
 substitutions:
   TweetsTable: !Ref TweetsTable
+  LikesTable: !Ref LikesTable
+  UsersTable: !Ref UsersTable

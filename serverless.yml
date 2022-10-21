@@ -1,11 +1,11 @@
 service: appsyncmasterclass-backend
-frameworkVersion: '2'
+frameworkVersion: "2"
 
 plugins:
   - serverless-appsync-plugin
   - serverless-iam-roles-per-function
   - serverless-manifest-plugin
-  - serverless-export-env # we run "npm run sls -- export-env" and it takes env varibles from 
+  - serverless-export-env # we run "npm run sls -- export-env" and it takes env varibles from
   #resources and function and dowloand the "env" file that we can add into our test cases
 
 provider:
@@ -30,8 +30,8 @@ custom:
   manifest:
     postProcess: ./processManifest.js
     disablePostDeployGeneration: true # disable running after single deployment
-    disableOutput: true # diable to writte the file into the .serverless folder every single time. 
-    silent: true # disable the message it outputting when manifest file is created 
+    disableOutput: true # diable to writte the file into the .serverless folder every single time.
+    silent: true # disable the message it outputting when manifest file is created
 
 functions:
   confirmUserSignup:
@@ -42,14 +42,14 @@ functions:
       - Effect: Allow
         Action: dynamodb:PutItem
         Resource: !GetAtt UsersTable.Arn
-  
+
   getImageUploadUrl:
     handler: functions/get-upload-url.handler
     environment:
       BUCKET_NAME: !Ref AssetsBucket
     iamRoleStatements:
       - Effect: Allow
-        Action: 
+        Action:
           - s3:PutObject
           - s3:PutObjectAcl
         Resource: !Sub ${AssetsBucket.Arn}/*
@@ -70,8 +70,6 @@ functions:
           - !GetAtt TweetsTable.Arn
           - !GetAtt TimelinesTable.Arn
 
-      
-
 resources:
   Resources:
     UsersTable:
@@ -89,7 +87,7 @@ resources:
             Value: ${self:custom.stage}
           - Key: Name
             Value: users-table
-    
+
     TweetsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -135,7 +133,30 @@ resources:
             Value: ${self:custom.stage}
           - Key: Name
             Value: timelines-table
-    CognitoUserPool :
+
+    LikesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        BillingMode: PAY_PER_REQUEST
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: tweetId
+            KeyType: RANGE
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: tweetId
+            AttributeType: S
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        Tags:
+          - Key: Environment
+            Value: ${self:custom.stage}
+          - Key: Name
+            Value: likes-table
+
+    CognitoUserPool:
       Type: AWS::Cognito::UserPool
       Properties:
         AutoVerifiedAttributes:
@@ -153,17 +174,17 @@ resources:
           - AttributeDataType: String
             Name: name
             Required: false
-            Mutable: true  
+            Mutable: true
         LambdaConfig:
           PostConfirmation: !GetAtt ConfirmUserSignupLambdaFunction.Arn
 
     UserPoolInvokeConfirmUserSignupLambdaPermission:
       Type: AWS::Lambda::Permission
-      Properties: 
+      Properties:
         Action: lambda:invokeFunction
         FunctionName: !Ref ConfirmUserSignupLambdaFunction
         Principal: cognito-idp.amazonaws.com
-        SourceArn: !GetAtt CognitoUserPool.Arn 
+        SourceArn: !GetAtt CognitoUserPool.Arn
 
     WebUserPoolClient:
       Type: AWS::Cognito::UserPoolClient
@@ -187,18 +208,16 @@ resources:
                 - GET
                 - PUT
               AllowedOrigins:
-                - '*'
+                - "*"
               AllowedHeaders:
-                - '*' 
-
+                - "*"
 
   Outputs:
-      AwsRegion:
-        Value: ${self:custom.region}
+    AwsRegion:
+      Value: ${self:custom.region}
 
-      CognitoUserPoolId:
-        Value: !Ref CognitoUserPool
-      
-      WebCognitoUserPoolClientId:
-        Value: !Ref WebUserPoolClient
-      
+    CognitoUserPoolId:
+      Value: !Ref CognitoUserPool
+
+    WebCognitoUserPoolClientId:
+      Value: !Ref WebUserPoolClient

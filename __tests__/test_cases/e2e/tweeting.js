@@ -4,7 +4,7 @@ const then = require('../../steps/then')
 const when = require('../../steps/when')
 const chance = require('chance').Chance()
 
-describe('Given an authenticated user', () =>{
+describe('Given an authenticated user', () => {
   let user
   beforeAll(async () => {
     user = await given.an_authenticated_user()
@@ -16,16 +16,17 @@ describe('Given an authenticated user', () =>{
     beforeAll(async () => {
       tweet = await when.a_user_calls_tweet(user, text)
     })
-    
+
     it('Should return the new tweet', () => {
       expect(tweet).toMatchObject({
         text,
         replies: 0,
         likes: 0,
-        retweets: 0
+        retweets: 0,
+        liked: false,
       })
     })
-    
+
     describe('When she calls getTweets', () => {
       let tweets, nextToken
       beforeAll(async () => {
@@ -34,12 +35,12 @@ describe('Given an authenticated user', () =>{
         nextToken = result.nextToken
       })
 
-      it('She will see the new tweet in the tweets array',  () => {
-  
+      it('She will see the new tweet in the tweets array', () => {
+
         expect(nextToken).toBeNull()
         expect(tweets.length).toEqual(1)
         expect(tweets[0]).toEqual(tweet)
-  
+
       })
       it('She cannot ask for more than 25 tweets in a page', async () => {
         await expect(when.a_user_calls_getTweets(user, user.username, 26))
@@ -47,7 +48,7 @@ describe('Given an authenticated user', () =>{
           .toMatchObject({
             message: expect.stringContaining('max limit is 25')
           })
-  
+
       })
     })
 
@@ -60,12 +61,12 @@ describe('Given an authenticated user', () =>{
       })
 
 
-      it('She will see the new tweet in the tweets array',  () => {
-  
+      it('She will see the new tweet in the tweets array', () => {
+
         expect(nextToken).toBeNull()
         expect(tweets.length).toEqual(1)
         expect(tweets[0]).toEqual(tweet)
-  
+
       })
       it('She cannot ask for more than 25 tweets in a page', async () => {
         await expect(when.a_user_calls_getMyTimeline(user, 26))
@@ -73,7 +74,28 @@ describe('Given an authenticated user', () =>{
           .toMatchObject({
             message: expect.stringContaining('max limit is 25')
           })
-  
+
+      })
+    })
+
+    describe('When she likes the tweet', () => {
+      beforeAll(async () => {
+        await when.a_user_calls_like(user, tweet.id)
+      })
+
+      it('Should see Tweet.liked as true', async () => {
+        const { tweets } = await when.a_user_calls_getMyTimeline(user, 25)
+
+        expect(tweets.length).toEqual(1)
+        expect(tweets[0].id).toEqual(tweet.id)
+        expect(tweets[0].liked).toEqual(true)
+      })
+      it('Should not be able to like the same tweet a second time', async () => {
+        await expect(() => when.a_user_calls_like(user, tweet.id))
+          .rejects
+          .toMatchObject({
+            message: expect.stringContaining('DynamoDB transaction error')
+          })
       })
     })
   })
