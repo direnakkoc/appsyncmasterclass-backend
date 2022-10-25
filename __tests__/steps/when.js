@@ -79,6 +79,10 @@ fragment retweetFields on Retweet {
     ... on Tweet {
       ... tweetFields
     }
+
+    ... on Reply {
+      ... replyFields
+    }
   }
 }
 `
@@ -93,12 +97,45 @@ fragment iTweetFields on ITweet {
 }
 `
 
+const replyFragment = `
+fragment replyFields on Reply {
+  id
+  profile {
+    ... iProfileFields
+  }
+  createdAt
+  text
+  replies
+  likes
+  retweets
+  retweeted
+  liked
+  inReplyToTweet {
+    id
+    profile {
+      ... iProfileFields
+    }
+    createdAt
+    ... on Tweet {
+      replies
+    }
+    ... on Reply {
+      replies
+    }
+  }
+  inReplyToUsers {
+    ... iProfileFields
+  }
+}
+`
+
 registerFragment('myProfileFields', myProfileFragment)
 registerFragment('otherProfileFields', otherProfileFragment)
 registerFragment('iProfileFields', iProfileFragment)
 registerFragment('tweetFields', tweetFragment)
 registerFragment('retweetFields', retweetFragment)
 registerFragment('iTweetFields', iTweetFragment)
+registerFragment('replyFields', replyFragment)
 
 const we_invoke_confirmUserSignup = async (username, name, email) => {
   const handler = require('../../functions/confirm-user-signup').handler
@@ -229,6 +266,23 @@ const we_invoke_an_appsync_template = (templatePath, context) => {
     escape: false
   })
   return JSON.parse(compiler.render(context))
+}
+
+const we_invoke_reply = async (username, tweetId, text) => {
+  const handler = require('../../functions/reply').handler
+
+  const context = {}
+  const event = {
+    identity: {
+      username
+    },
+    arguments: {
+      tweetId,
+      text
+    }
+  }
+
+  return await handler(event, context)
 }
 
 const a_user_calls_getMyProfile = async (user) => {
@@ -434,9 +488,7 @@ const a_user_calls_retweet = async (user, tweetId) => {
 
 const a_user_calls_unretweet = async (user, tweetId) => {
   const unretweet = `mutation unretweet($tweetId: ID!) {
-    unretweet(tweetId: $tweetId) {
-      ... retweetFields
-    }
+    unretweet(tweetId: $tweetId)
   }`
   const variables = {
     tweetId
@@ -450,6 +502,25 @@ const a_user_calls_unretweet = async (user, tweetId) => {
   return result
 }
 
+const a_user_calls_reply = async (user, tweetId, text) => {
+  const reply = `mutation reply($tweetId: ID!, $text: String!) {
+    reply(tweetId: $tweetId, text: $text) {
+      ... replyFields
+    }
+  }`
+  const variables = {
+    tweetId,
+    text
+  }
+
+  const data = await GraphQL(process.env.API_URL, reply, variables, user.accessToken)
+  const result = data.reply
+
+  console.log(`[${user.username}] - replied to tweet [${tweetId}]`)
+
+  return result
+}
+
 module.exports = {
   we_invoke_confirmUserSignup,
   we_invoke_getImageUploadUrl,
@@ -457,6 +528,7 @@ module.exports = {
   we_invoke_tweet,
   we_invoke_retweet,
   we_invoke_unretweet,
+  we_invoke_reply,
   a_user_signs_up,
   a_user_calls_getMyProfile,
   a_user_calls_editMyProfile,
@@ -468,5 +540,6 @@ module.exports = {
   a_user_calls_unlike,
   a_user_calls_getLikes,
   a_user_calls_retweet,
-  a_user_calls_unretweet
+  a_user_calls_unretweet,
+  a_user_calls_reply
 }
