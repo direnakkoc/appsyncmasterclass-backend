@@ -31,16 +31,15 @@ type Mutation {
 
   unlike(tweetId: ID!): Boolean!
 
-
   retweet(tweetId: ID!): Retweet!
   
   unretweet(tweetId: ID!): Boolean!
 
   reply(tweetId: ID!, text: String): Reply!
   
-  follow(tweetId: ID!): Boolean!
-
-  unfollow(tweetId: ID!): Boolean!
+  follow(userId: ID!): Boolean!
+  
+  unfollow(userId: ID!): Boolean!
   
 }
 
