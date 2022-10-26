@@ -39,6 +39,8 @@ fragment otherProfileFields on OtherProfile {
   followingCount
   tweetsCount
   likesCounts
+  following
+  followedBy
 }
 `
 
@@ -285,6 +287,20 @@ const we_invoke_reply = async (username, tweetId, text) => {
   return await handler(event, context)
 }
 
+const we_invoke_distributeTweets = async (event) => {
+  const handler = require('../../functions/distribute-tweets').handler
+
+  const context = {}
+  return await handler(event, context)
+}
+
+const we_invoke_distributeTweetsToFollower = async (event) => {
+  const handler = require('../../functions/distribute-tweets-to-follower').handler
+
+  const context = {}
+  return await handler(event, context)
+}
+
 const a_user_calls_getMyProfile = async (user) => {
   const getMyProfile = `query getMyProfile {
     getMyProfile {
@@ -303,6 +319,31 @@ const a_user_calls_getMyProfile = async (user) => {
   const profile = data.getMyProfile
 
   console.log(`[${user.username}] - fetched profile`)
+
+  return profile
+}
+
+
+const a_user_calls_getProfile = async (user, screenName) => {
+  const getProfile = `query getProfile($screenName: String!) {
+    getProfile(screenName: $screenName) {
+      ... otherProfileFields
+      tweets {
+        nextToken
+        tweets {
+          ... iTweetFields
+        }
+      }
+    }
+  }`
+  const variables = {
+    screenName
+  }
+
+  const data = await GraphQL(process.env.API_URL, getProfile, variables, user.accessToken)
+  const profile = data.getProfile
+
+  console.log(`[${user.username}] - fetched profile for [${screenName}]`)
 
   return profile
 }
@@ -521,6 +562,23 @@ const a_user_calls_reply = async (user, tweetId, text) => {
   return result
 }
 
+const a_user_calls_follow = async (user, userId) => {
+  const follow = `mutation follow($userId: ID!) {
+    follow(userId: $userId)
+  }`
+  const variables = {
+    userId
+  }
+
+  const data = await GraphQL(process.env.API_URL, follow, variables, user.accessToken)
+  const result = data.follow
+
+  console.log(`[${user.username}] - followed [${userId}]`)
+
+  return result
+}
+
+
 module.exports = {
   we_invoke_confirmUserSignup,
   we_invoke_getImageUploadUrl,
@@ -529,8 +587,11 @@ module.exports = {
   we_invoke_retweet,
   we_invoke_unretweet,
   we_invoke_reply,
+  we_invoke_distributeTweets,
+  we_invoke_distributeTweetsToFollower,
   a_user_signs_up,
   a_user_calls_getMyProfile,
+  a_user_calls_getProfile,
   a_user_calls_editMyProfile,
   a_user_calls_getImageUploadUrl,
   a_user_calls_tweet,
@@ -541,5 +602,6 @@ module.exports = {
   a_user_calls_getLikes,
   a_user_calls_retweet,
   a_user_calls_unretweet,
-  a_user_calls_reply
+  a_user_calls_reply,
+  a_user_calls_follow
 }

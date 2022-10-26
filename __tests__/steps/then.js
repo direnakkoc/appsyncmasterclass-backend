@@ -114,6 +114,23 @@ const tweet_exists_in_TimelinesTable = async(userId, tweetId) => {
   
 }
 
+const tweet_does_not_exist_in_TimelinesTable = async (userId, tweetId) => {
+  const DynamoDB = new AWS.DynamoDB.DocumentClient()
+
+  console.log(`looking for tweet [${tweetId}] for user [${userId}] in table [${process.env.TIMELINES_TABLE}]`)
+  const resp = await DynamoDB.get({
+    TableName: process.env.TIMELINES_TABLE,
+    Key: {
+      userId,
+      tweetId
+    }
+  }).promise()
+
+  expect(resp.Item).not.toBeTruthy()
+
+  return resp.Item
+}
+
 const retweet_exists_in_RetweetsTable = async(userId, tweetId) => {
   const DynamoDB = new AWS.DynamoDB.DocumentClient()
 
@@ -211,6 +228,7 @@ module.exports = {
   user_can_upload_image_to_url,
   user_can_download_image_from,
   tweet_exists_in_TweetsTable,
+  tweet_does_not_exist_in_TimelinesTable,
   retweet_exists_in_TweetsTable,
   reply_exists_in_TweetsTable,
   retweet_does_not_exist_in_TweetsTable,

@@ -139,6 +139,50 @@ functions:
         Resource:
           - !GetAtt TweetsTable.Arn
           - !GetAtt TimelinesTable.Arn
+  
+  distributeTweets:
+    handler: functions/distribute-tweets.handler
+    environment:
+      RELATIONSHIPS_TABLE: !Ref RelationshipsTable
+      TIMELINES_TABLE: !Ref TimelinesTable
+    events:
+      - stream:
+          type: dynamodb
+          arn: !GetAtt TweetsTable.StreamArn
+    iamRoleStatements:
+      - Effect: Allow
+        Action: 
+          - dynamodb:PutItem
+          - dynamodb:DeleteItem
+          - dynamodb:BatchWriteItem
+        Resource: !GetAtt TimelinesTable.Arn
+      - Effect: Allow
+        Action: dynamodb:Query
+        Resource: !Sub "${RelationshipsTable.Arn}/index/byOtherUser"
+
+  distributeTweetsToFollower:
+    handler: functions/distribute-tweets-to-follower.handler
+    environment:
+      TWEETS_TABLE: !Ref TweetsTable
+      TIMELINES_TABLE: !Ref TimelinesTable
+      MAX_TWEETS: "100"
+    events:
+      - stream:
+          type: dynamodb
+          arn: !GetAtt RelationshipsTable.StreamArn
+    iamRoleStatementsName: ${self:service}-${self:custom.stage}-distributeTweetsToFollower
+    iamRoleStatements:
+      - Effect: Allow
+        Action: dynamodb:Query
+        Resource:
+          - !Sub "${TweetsTable.Arn}/index/byCreator"
+          - !Sub "${TimelinesTable.Arn}/index/byDistributedFrom"
+      - Effect: Allow
+        Action: 
+          - dynamodb:BatchWriteItem
+          - dynamodb:PutItem
+          - dynamodb:DeleteItem
+        Resource: !GetAtt TimelinesTable.Arn
 
 resources:
   Resources:
@@ -152,12 +196,21 @@ resources:
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
+          - AttributeName: screenName
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: byScreenName
+            KeySchema:
+              - AttributeName: screenName
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
         Tags:
           - Key: environment
             Value: ${self:custom.stage}
           - Key: Name
             Value: users-table
-
+  
     TweetsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -199,11 +252,15 @@ resources:
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+
         Tags:
           - Key: Enviroment
             Value: ${self:custom.stage}
           - Key: Name
             Value: tweets-table
+ 
     TimelinesTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -218,6 +275,17 @@ resources:
             AttributeType: S
           - AttributeName: tweetId
             AttributeType: S
+          - AttributeName: distributedFrom
+            AttributeType: S
+        GlobalSecondaryIndexes:
+          - IndexName: byDistributedFrom
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: distributedFrom
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
         Tags:
           - Key: Enviroment
             Value: ${self:custom.stage}
