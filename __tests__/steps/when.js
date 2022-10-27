@@ -413,19 +413,19 @@ const a_user_calls_tweet = async (user, text) => {
 
 const a_user_calls_getTweets = async (user, userId, limit, nextToken) => {
   const getTweets = `query getTweets($userId: ID!, $limit: Int!, $nextToken: String) {
-    getTweets(userId: $userId, limit: $limit, nextToken: $nextToken){
+    getTweets(userId: $userId, limit: $limit, nextToken: $nextToken) {
       nextToken
-      tweets{
-       ... iTweetFields 
+      tweets {
+        ... iTweetFields
       }
-    } 
+    }
   }`
-
   const variables = {
     userId,
     limit,
     nextToken
   }
+
   const data = await GraphQL(process.env.API_URL, getTweets, variables, user.accessToken)
   const result = data.getTweets
 
