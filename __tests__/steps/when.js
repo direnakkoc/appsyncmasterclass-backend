@@ -438,12 +438,11 @@ const a_user_calls_getMyTimeline = async (user, limit, nextToken) => {
   const getMyTimeline = `query getMyTimeline($limit: Int!, $nextToken: String) {
     getMyTimeline(limit: $limit, nextToken: $nextToken) {
       nextToken
-      tweets{
+      tweets {
         ... iTweetFields
       }
-    } 
+    }
   }`
-
   const variables = {
     limit,
     nextToken
