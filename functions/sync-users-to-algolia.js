@@ -25,7 +25,7 @@ module.exports.handler = middy(async (event, context) => {
 }).use(ssm({
   cache: true,
   cacheExpiryInMillis: 5 * 60 * 1000, // 5 mins
-  names: {
+  fetchData: {
     ALGOLIA_APP_ID: `/${STAGE}/algolia-app-id`,
     ALGOLIA_WRITE_KEY: `/${STAGE}/algolia-admin-key`
 
