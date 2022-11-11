@@ -1,6 +1,7 @@
 schema{
   query: Query
   mutation: Mutation
+  subscription: Subscription
 }
 
 type Query {
@@ -26,6 +27,13 @@ type Query {
     limit: Int!
     nextToken: String
   ): SearchResultsPage!
+
+  getHashTag(
+    hashTag: String!
+    mode: HashTagMode!
+    limit: Int!
+    nextToken: String
+  ): HashTagResultsPage!
 }
 
 type Mutation {
@@ -46,10 +54,57 @@ type Mutation {
   follow(userId: ID!): Boolean!
   
   unfollow(userId: ID!): Boolean!
+
+  notifyRetweeted(
+    id: ID!
+    userId: ID!
+    tweetId: ID!
+    retweetedBy: ID!
+    retweetId: ID!
+  ): Notification!
+  @aws_iam
+
+  notifyLiked(
+    id: ID!
+    userId: ID!
+    tweetId: ID!
+    likedBy: ID!
+  ): Notification!
+  @aws_iam
+
+  notifyMentioned(
+    id: ID!
+    userId: ID!
+    mentionedBy: ID!
+    mentionedByTweetId: ID!
+  ): Notification!
+  @aws_iam
+
+  notifyReplied(
+    id: ID!
+    userId: ID!
+    tweetId: ID!
+    replyTweetId: ID!
+    repliedBy: ID!
+  ): Notification!
+  @aws_iam
   
 }
 
+type Subscription {
+  onNotified(userId: ID!, type: NotificationType): Notification
+  @aws_subscribe(mutations: ["notifyRetweeted", "notifyLiked", "notifyMentioned", "notifyReplied"])
+}
+
 enum SearchMode {
+  Top
+  Latest
+  People
+  Photos
+  Videos
+}
+
+enum HashTagMode {
   Top
   Latest
   People
@@ -185,4 +240,65 @@ union SearchResult = MyProfile | OtherProfile | Tweet | Reply
 type SearchResultsPage {
   results: [SearchResult!]
   nextToken: String
+}
+
+union HashTagResult = MyProfile | OtherProfile | Tweet | Reply
+
+type HashTagResultsPage {
+  results: [HashTagResult!]
+  nextToken: String
+}
+
+type Retweeted implements iNotification @aws_iam @aws_cognito_user_pools {
+  id: ID!
+  type: NotificationType!
+  userId: ID!
+  tweetId: ID!
+  retweetedBy: ID!
+  retweetId: ID!
+  createdAt: AWSDateTime!
+}
+
+type Liked implements iNotification @aws_iam @aws_cognito_user_pools {
+  id: ID!
+  type: NotificationType!
+  userId: ID!
+  tweetId: ID!
+  likedBy: ID!
+  createdAt: AWSDateTime!
+}
+
+type Mentioned implements iNotification @aws_iam @aws_cognito_user_pools {
+  id: ID!
+  type: NotificationType!
+  userId: ID!
+  mentionedBy: ID!
+  mentionedByTweetId: ID!
+  createdAt: AWSDateTime!
+}
+
+type Replied implements iNotification @aws_iam @aws_cognito_user_pools {
+  id: ID!
+  type: NotificationType!
+  userId: ID!
+  tweetId: ID!
+  replyTweetId: ID!
+  repliedBy: ID!
+  createdAt: AWSDateTime!
+}
+
+union Notification @aws_iam @aws_cognito_user_pools = Retweeted | Liked | Mentioned | Replied
+
+interface iNotification @aws_iam @aws_cognito_user_pools {
+  id: ID!
+  type: NotificationType!
+  userId: ID!
+  createdAt: AWSDateTime!
+}
+
+enum NotificationType {
+  Retweeted
+  Liked
+  Mentioned
+  Replied
 }

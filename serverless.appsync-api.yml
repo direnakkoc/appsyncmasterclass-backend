@@ -5,8 +5,14 @@ userPoolConfig:
   awsRegion: eu-west-1
   defaultAction: ALLOW
   userPoolId: !Ref CognitoUserPool
+additionalAuthenticationProviders:
+  - authenticationType: AWS_IAM
 mappingTemplatesLocation: mapping-templates
 mappingTemplates:
+  - type: Subscription
+    field: onNotified
+    dataSource: none
+
   - type: Query
     field: getMyProfile
     dataSource: usersTable
@@ -46,6 +52,11 @@ mappingTemplates:
   - type: Query
     field: search
     dataSource: searchFunction
+    request: false
+    response: false
+  - type: Query
+    field: getHashTag
+    dataSource: getHashTagFunction
     request: false
     response: false
 
@@ -251,6 +262,10 @@ dataSources:
     name: searchFunction
     config:
       functionName: search
+  - type: AWS_LAMBDA
+    name: getHashTagFunction
+    config:
+      functionName: getHashTag
 
 substitutions:
   TweetsTable: !Ref TweetsTable
