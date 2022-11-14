@@ -4,7 +4,7 @@ frameworkVersion: "2"
 plugins:
   - serverless-appsync-plugin
   - serverless-iam-roles-per-function
-  - serverless-manifest-plugin
+  - serverless-layers
   - serverless-export-env # we run "npm run sls -- export-env" and it takes env varibles from
   #resources and function and dowloand the "env" file that we can add into our test cases
 
@@ -27,11 +27,8 @@ custom:
   appSync:
     - ${file(serverless.appsync-api.yml)}
 
-  manifest:
-    postProcess: ./processManifest.js
-    disablePostDeployGeneration: true # disable running after single deployment
-    disableOutput: true # diable to writte the file into the .serverless folder every single time.
-    silent: true # disable the message it outputting when manifest file is created
+  serverless-layers:
+    layersDeploymentBucket: ${ssm:/appsyncmasterclass/${self:custom.stage}/layer-deployment-bucket}
 
 functions:
   confirmUserSignup:
@@ -545,3 +542,6 @@ resources:
 
     WebCognitoUserPoolClientId:
       Value: !Ref WebUserPoolClient
+
+    ApiUrl:
+      Value: !GetAtt AppsyncmasterclassGraphQlApi.GraphQLUrl
