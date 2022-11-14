@@ -30,6 +30,13 @@ custom:
   serverless-layers:
     layersDeploymentBucket: ${ssm:/appsyncmasterclass/${self:custom.stage}/layer-deployment-bucket}
 
+  appSyncCaching:
+    default:
+    prod:
+      behavior: PER_RESOLVER_CACHING
+      ttl: 3600
+      type: T2_SMALL
+
 functions:
   confirmUserSignup:
     handler: functions/confirm-user-signup.handler
@@ -261,6 +268,19 @@ functions:
       - Effect: Allow
         Action: dynamodb:GetItem
         Resource: !GetAtt TweetsTable.Arn
+
+  notifyDmed:
+    handler: functions/notify-dmed.handler
+    environment:
+      GRAPHQL_API_URL: !GetAtt AppsyncmasterclassGraphQlApi.GraphQLUrl
+    events:
+      - stream:
+          type: dynamodb
+          arn: !GetAtt DirectMessagesTable.StreamArn
+    iamRoleStatements:
+      - Effect: Allow
+        Action: appsync:GraphQL
+        Resource: !Sub ${AppsyncmasterclassGraphQlApi.Arn}/*
 
   sendDirectMessage:
     handler: functions/send-direct-message.handler
