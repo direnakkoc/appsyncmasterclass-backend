@@ -294,6 +294,15 @@ functions:
       - Effect: Allow
         Action: dynamodb:UpdateItem
         Resource: !GetAtt ConversationsTable.Arn
+  
+  getTweetCreator:
+    handler: functions/get-tweet-creator.handler
+    environment:
+      USERS_TABLE: !Ref UsersTable
+    iamRoleStatements:
+      - Effect: Allow
+        Action: dynamodb:BatchGetItem
+        Resource: !GetAtt UsersTable.Arn
 
 resources:
   Resources:
