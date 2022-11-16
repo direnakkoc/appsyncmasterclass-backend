@@ -1,0 +1,52 @@
+ {
+  "Records": [
+      {
+          "eventID": "c04017f33c56dbdd109635b702a1d51b",
+          "eventName": "INSERT",
+          "eventVersion": "1.1",
+          "eventSource": "aws:dynamodb",
+          "awsRegion": "eu-west-1",
+          "dynamodb": {
+              "ApproximateCreationDateTime": 1668504614,
+              "Keys": {
+                  "id": {
+                      "S": "01GHX9ZXFWN28292G2F03KZ91Z"
+                  }
+              },
+              "NewImage": {
+                  "createdAt": {
+                      "S": "2022-11-15T09:30:14.396Z"
+                  },
+                  "creator": {
+                      "S": "8568a036-f78d-48db-9cd1-869526b7f2bf"
+                  },
+                  "hashTags": {
+                      "L": []
+                  },
+                  "replies": {
+                      "N": "0"
+                  },
+                  "__typename": {
+                      "S": "Tweet"
+                  },
+                  "id": {
+                      "S": "01GHX9ZXFWN28292G2F03KZ91Z"
+                  },
+                  "text": {
+                      "S": "hey @Diren"
+                  },
+                  "retweets": {
+                      "N": "0"
+                  },
+                  "likes": {
+                      "N": "0"
+                  }
+              },
+              "SequenceNumber": "130443300000000054954019033",
+              "SizeBytes": 195,
+              "StreamViewType": "NEW_AND_OLD_IMAGES"
+          },
+          "eventSourceARN": "arn:aws:dynamodb:eu-west-1:955580126411:table/appsyncmasterclass-backend-dev-TweetsTable-1S4SSRWM47TFM/stream/2022-10-25T14:42:52.905"
+      }
+  ]
+}
